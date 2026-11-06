@@ -37,6 +37,8 @@ public final class ClientBridge implements PluginMessageListener, Listener {
     private final Outbox outbox;
     private final int range;
     private final Map<UUID, Watch> watches = new HashMap<>();
+    /** The current second, for the rate limits (tests fix it). */
+    java.util.function.LongSupplier clock = () -> System.currentTimeMillis() / 1000;
 
     /** What one player's mod has been told, by position. A null info means "no box there". */
     static final class Watch {
@@ -63,7 +65,7 @@ public final class ClientBridge implements PluginMessageListener, Listener {
     @Override
     public void onPluginMessageReceived(String channel, Player player, byte[] message) {
         Watch w = watch(player);
-        long now = System.currentTimeMillis() / 1000;
+        long now = clock.getAsLong();
         if (w.second != now) { w.second = now; w.messages = 0; w.positions = 0; }
         if (++w.messages > MESSAGES_PER_SECOND) return;
         try {

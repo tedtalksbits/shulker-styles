@@ -94,13 +94,16 @@ class ClientBridgeTest {
     @Test void positionBudgetPerSecond() {
         List<Pos> batch = new ArrayList<>();
         for (int i = 0; i < Protocol.MAX_QUERY; i++) batch.add(new Pos(i % 30, 70, i / 30));
+        bridge.clock = () -> 1000;
         int asked = 0;
         while (asked + Protocol.MAX_QUERY <= ClientBridge.POSITIONS_PER_SECOND + 2 * Protocol.MAX_QUERY) {
             bridge.onPluginMessageReceived(ClientBridge.QUERY, player, Protocol.query(batch));
             asked += Protocol.MAX_QUERY;
         }
-        // Assumes the loop ran within one second, which it does by a wide margin.
         assertEquals(ClientBridge.POSITIONS_PER_SECOND, sent.size());
+        bridge.clock = () -> 1001;
+        bridge.onPluginMessageReceived(ClientBridge.QUERY, player, Protocol.query(batch));
+        assertEquals(ClientBridge.POSITIONS_PER_SECOND + Protocol.MAX_QUERY, sent.size(), "a new second, a new budget");
     }
 
     @Test void malformedIgnored() {
