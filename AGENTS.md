@@ -41,7 +41,9 @@ plugin (their patterns were copied, their files never edited).
    (pattern layers).
 2. Slice 3: labels (name + icon) on placed boxes and items; settings screen (on/off, distance). **Decision 4 (where
    labels show) is still open:** show the owner mockups first. Suggested: the side the box opens toward, and the lid.
-3. Optional: a mod button for choosing the icon instead of the command.
+3. Slice 3: the icon button in the box's screen (decision table). Needs a new client->server message (set the icon
+   of the box at x, y, z the player has open; checked server-side: that box's inventory is open for that player) and
+   a protocol bump.
 
 ## Decisions already made (don't reopen without asking)
 
@@ -50,8 +52,8 @@ plugin (their patterns were copied, their files never edited).
 | Name "Shulker Styles", folder `software\shulker-styles` | Owner's call |
 | The box keeps its own dye colour; the banner's layers go over it, its base colour is ignored | Owner's call (shields replace the colour; boxes don't) |
 | Label icon: automatic (most common item inside, by total count, ties to the first slot) **and** the player can choose one | Owner: "both" |
-| Choosing the icon: `/shulkerstyles icon` with the box in the main hand and the icon item in the off hand; `icon clear` | Agent's pick for slice 1 (no recipe or click conflicts); flagged to the owner |
-| Removing patterns: water cauldron, one layer per use, one water level each, like banners; vanilla's undye only once no layers are left; sneaking places | Owner chose the cauldron; per-layer matches vanilla banners |
+| Choosing the icon: a button in the shulker box's screen (mod, slice 3): click the icon slot by the title, then any item in the box or your inventory; click again for automatic. `/shulkerstyles icon` (off hand) stays as the fallback for players without the mod | Owner: the command alone isn't good enough UX; picked the in-screen button over dropping an item onto the box or an item frame |
+| Removing patterns: water cauldron, one layer per use, one water level each, like banners; vanilla's undye only once no layers are left; sneaking places | Owner chose the cauldron, then confirmed one layer per use "for now" |
 | Recipe: shapeless box + banner; banner used up; no result for a plain banner or a box that already has patterns; at most 16 layers | Kickoff, as shields |
 | Item storage: vanilla `banner_patterns` component; chosen icon in item PDC `shulkerstyles:icon` | Kickoff; `banner_patterns` is what the renderer will read |
 | Placed box storage: block entity PDC (`shulkerstyles:layers` text, `shulkerstyles:icon`) | Kickoff. Vanilla does keep unknown components on the block entity (`BlockEntity.components`, read from the 26.3 jar) but only creative breaks and Ctrl+pick copy them back; the loot table copies just name, contents, lock, loot table. Paper has no API to read them, so the PDC is the plugin's record |

@@ -40,12 +40,11 @@ The mod draws nothing yet: boxes look the same as before. That's slice 2.
 
 ## ⚠️ Known limits and decisions for you
 
-1. **Choosing the icon is a command for now** (`/shulkerstyles icon`, item in the off hand). I picked it because a
-   recipe or a click would clash with dyeing, placing or washing. A button in the mod could come in slice 3: say if
-   you'd rather have something else.
+1. **Choosing the icon is a command for now** (`/shulkerstyles icon`, item in the off hand). Slice 3 adds the button
+   in the box's screen you picked; the command stays for players without the mod.
 2. **The automatic icon tells modded players what's inside a box** (the most common item), within 64 blocks, even
    if they couldn't open it. Fine for friends and family; it's what "automatic" means.
-3. **Washing takes one layer per use**, like a banner. Say if you'd rather wash all layers at once.
+3. **Washing takes one layer per use**, like a banner (your call, for now).
 4. **Players without the mod see patterns only in the box's tooltip** (vanilla lists them) and through
    `/shulkerstyles info`, not on the box itself.
 5. **Where labels show on a placed box (decision 4) is still open.** I'll bring mockups with slice 3.
