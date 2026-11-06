@@ -49,4 +49,14 @@ class BoxCacheTest {
 		assertEquals(2, qs.size());
 		assertEquals(ask.subList(0, Protocol.MAX_QUERY), Protocol.readQuery(qs.get(0)));
 	}
+
+	@Test void forgetAsksAgainAtOnce() {
+		BoxCache c = new BoxCache();
+		c.onBox(new Protocol.Box(a, BoxInfo.PLAIN));
+		c.toAsk(List.of(b), 0);
+		c.forget(a);
+		c.forget(b);
+		assertNull(c.get(a), "a box placed where another was: nothing stale shown");
+		assertEquals(List.of(a, b), c.toAsk(List.of(a, b), 1), "asked straight away, not after the retry delay");
+	}
 }

@@ -7,6 +7,7 @@ import dev.whizzle.shulker.model.Protocol.Pos;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback;
 import net.fabricmc.fabric.api.client.command.v2.ClientCommands;
+import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientBlockEntityEvents;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ServerboundPlayChannelEvents;
@@ -24,8 +25,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Shulker Styles client. Talks to the plugin (hello, then asks about every shulker box in range and keeps the
@@ -38,6 +41,8 @@ public final class ShulkerStylesClient implements ClientModInitializer {
 	/** From the server's welcome; 0 until it answers (or when the server doesn't have the plugin). */
 	static int serverProtocol, range;
 	private static long ticks;
+	/** Boxes that just appeared (placed, or their chunk loaded): asked about on the next tick, not the next scan. */
+	private static final Set<Pos> FRESH = new LinkedHashSet<>();
 
 	@Override
 	public void onInitializeClient() {
@@ -55,19 +60,38 @@ public final class ShulkerStylesClient implements ClientModInitializer {
 			if (channels.contains(Identifier.fromNamespaceAndPath(Protocol.NAMESPACE, Protocol.HELLO))) Net.send(Protocol.HELLO, Protocol.hello());
 		});
 		ClientTickEvents.END_CLIENT_TICK.register(ShulkerStylesClient::tick);
+		ClientBlockEntityEvents.BLOCK_ENTITY_LOAD.register((be, level) -> {
+			if (!(be instanceof ShulkerBoxBlockEntity)) return;
+			Pos p = pos(be.getBlockPos());
+			BOXES.forget(p);
+			FRESH.add(p);
+		});
+		ClientBlockEntityEvents.BLOCK_ENTITY_UNLOAD.register((be, level) -> {
+			if (be instanceof ShulkerBoxBlockEntity) BOXES.forget(pos(be.getBlockPos()));
+		});
 		ClientCommandRegistrationCallback.EVENT.register((dispatcher, context) ->
 			dispatcher.register(ClientCommands.literal("shulkermod").executes(c -> { status(c.getSource().getClient()); return 1; })));
 	}
 
-	static void reset() { serverProtocol = 0; range = 0; BOXES.clear(); }
+	static void reset() { serverProtocol = 0; range = 0; BOXES.clear(); FRESH.clear(); }
+
+	static Pos pos(BlockPos p) { return new Pos(p.getX(), p.getY(), p.getZ()); }
 
 	static boolean active() { return serverProtocol == Protocol.VERSION && range > 0; }
 
-	/** Every 10 ticks: forget boxes out of range, ask about new ones. */
+	/** Every tick: ask about boxes that just appeared. Every 10 ticks: forget boxes out of range, ask about the rest. */
 	static void tick(Minecraft mc) {
-		if (++ticks % 10 != 0 || !active() || mc.level == null || mc.player == null) return;
+		++ticks;
+		if (!active() || mc.level == null || mc.player == null) { FRESH.clear(); return; }
 		BlockPos me = mc.player.blockPosition();
 		long r2 = (long) range * range;
+		if (!FRESH.isEmpty()) {
+			List<Pos> near = new ArrayList<>();
+			for (Pos p : FRESH) if (me.distSqr(new BlockPos(p.x(), p.y(), p.z())) <= r2) near.add(p);
+			FRESH.clear();
+			for (byte[] q : BoxCache.queries(BOXES.toAsk(near, ticks))) Net.send(Protocol.QUERY, q);
+		}
+		if (ticks % 10 != 0) return;
 		BOXES.retain(p -> me.distSqr(new BlockPos(p.x(), p.y(), p.z())) <= r2);
 		List<Pos> visible = new ArrayList<>();
 		int cr = (range >> 4) + 1;
@@ -78,7 +102,7 @@ public final class ShulkerStylesClient implements ClientModInitializer {
 				for (BlockEntity be : chunk.getBlockEntities().values()) {
 					if (!(be instanceof ShulkerBoxBlockEntity)) continue;
 					BlockPos p = be.getBlockPos();
-					if (me.distSqr(p) <= r2) visible.add(new Pos(p.getX(), p.getY(), p.getZ()));
+					if (me.distSqr(p) <= r2) visible.add(pos(p));
 				}
 			}
 		for (byte[] q : BoxCache.queries(BOXES.toAsk(visible, ticks))) Net.send(Protocol.QUERY, q);

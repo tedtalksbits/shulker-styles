@@ -1,7 +1,7 @@
 # Test plan: Shulker Styles
 
 Slice 1 (server side, tests 1-17) passed the real-Paper self-test; in a game, tests 2 and 5 passed. Slice 2 (patterns
-drawn by the mod, client 0.2.1, tests 18-27) is new and **hasn't been seen on screen yet**: please send screenshots.
+drawn by the mod, client 0.2.2, tests 18-28): 0.2.1 looked good in your game; 0.2.2 removes the delay after placing.
 `/shulkermod` (mod) and `/shulkerstyles info` (plugin) show what each side knows.
 
 ## Setup (once, about 5 minutes)
@@ -36,7 +36,7 @@ drawn by the mod, client 0.2.1, tests 18-27) is new and **hasn't been seen on sc
 | 16 | A dispenser facing open air, a patterned box inside, a button. Press it, then break the box | Placed, and drops with its patterns. |
 | 17 | Join with a client **without** the mod (or have someone do it) | Boxes look and work as normal; no errors. |
 
-### Slice 2: patterns drawn (client 0.2.1)
+### Slice 2: patterns drawn (client 0.2.2)
 
 Each face shows the middle square of the banner's pattern (your pick "B"). Screenshots of 18, 20, 21 and 22 please.
 
@@ -52,6 +52,7 @@ Each face shows the middle square of the banner's pattern (your pick "B"). Scree
 | 25 | Place a patterned box on a wall (sideways) and on a ceiling | The pattern follows the box (sideways it lies sideways, like the lid). |
 | 26 | Walk 70 blocks away and back | Far away the box disappears as in vanilla; back in range the pattern is there again within a second. |
 | 27 | Break a placed patterned box and put a **plain** box in the same spot | The new plain box shows no pattern (no leftovers). |
+| 28 | Place a patterned box and watch it | The pattern is there straight away (0.2.1 took up to half a second). |
 
 ## ⚠️ Known limits and decisions for you
 
@@ -65,7 +66,7 @@ Each face shows the middle square of the banner's pattern (your pick "B"). Scree
 5. **Where labels show on a placed box (decision 4) is still open.** I'll bring mockups with slice 3.
 6. Not checked by the self-test, only by you: a player breaking a box (tests 8-9), the crafting grids (3), the
    cauldron click (13-14), Ctrl+middle-click (10), and the mod's handshake and live updates (1, 6-7, 11-12).
-7. **Nothing in slice 2 has been seen on screen** (the cloud workspace can't run the 26.3 client). The pattern
-   layout was checked against the real textures; how it looks in game is up to your screenshots.
+7. Slice 2 was checked by you in game (0.2.1). The cloud workspace can't run the 26.3 client, so drawing changes
+   are only ever seen on your screen.
 8. **A resource pack that changes shulker box items** would hide the patterns on items (placed boxes still show
    them). Changing resource packs mid-game (F3+T) keeps the old pattern pictures until you rejoin.

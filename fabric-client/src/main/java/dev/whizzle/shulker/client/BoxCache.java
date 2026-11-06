@@ -52,6 +52,12 @@ public final class BoxCache {
 		else known.put(box.pos(), box.info());
 	}
 
+	/** A box appeared or went away here: forget what was known, so it's asked about again at once. */
+	public void forget(Pos pos) {
+		known.remove(pos);
+		asked.remove(pos);
+	}
+
 	/** Forgets positions the server stopped watching (out of range); they're asked again when back in range. */
 	public void retain(Predicate<Pos> keep) {
 		known.keySet().removeIf(keep.negate());

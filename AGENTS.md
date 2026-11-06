@@ -19,7 +19,7 @@ plugin (their patterns were copied, their files never edited).
 
 ## Status (2026-11-06)
 
-- **Slice 2 (patterns drawn) built, not yet seen in a game.** Client 0.2.1 (plugin unchanged, 0.1.0; protocol 1).
+- **Slice 2 (patterns drawn): seen working in the owner's game (0.2.1).** Client 0.2.2 (plugin unchanged, 0.1.0; protocol 1).
   - Placed boxes: the layers the server reported are drawn over the box, the lid's part moving with the lid.
   - Items (inventory, hand, dropped, item frames): from the item's own `banner_patterns`.
   - How: each layer is one more pass of vanilla's own (posed) shulker box model with a mask texture: the banner
@@ -31,6 +31,9 @@ plugin (their patterns were copied, their files never edited).
     texture. **Not checked: anything on screen** (no 26.3 client here).
   - Client 0.2.0 as first delivered gave the owner a black screen: a helper interface sat in the mixin package
     (Mixin refuses to load non-mixins from it). Fixed in 0.2.1; the audit and `MixinPackageTest` now catch it.
+  - **Owner, 0.2.1 in game: "looks good"**, apart from a short delay between placing a box and its pattern showing
+    (the 10-tick scan). 0.2.2 asks the moment a shulker block entity loads (`ClientBlockEntityEvents`), and forgets a
+    position when its block entity loads or unloads, so a new box never shows a broken one's pattern.
 
 - **Slice 1 (server side) done, not yet playtested.** Plugin 0.1.0, client 0.1.0, protocol 1.
   - Recipe: box + patterned banner, shapeless, crafting grids and crafters (`BannerRecipe`).
