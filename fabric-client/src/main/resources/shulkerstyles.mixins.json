@@ -1,0 +1,13 @@
+{
+	"required": true,
+	"package": "dev.whizzle.shulker.client.mixin",
+	"compatibilityLevel": "JAVA_25",
+	"client": [
+		"ShulkerBoxRenderStateMixin",
+		"ShulkerBoxRendererMixin",
+		"SpecialModelRenderersMixin"
+	],
+	"injectors": {
+		"defaultRequire": 1
+	}
+}

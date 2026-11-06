@@ -28,9 +28,9 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Shulker Styles client. Slice 1: talks to the plugin (hello, then asks about every shulker box in range and keeps
- * the answers, which the server updates). Drawing patterns and labels comes next; {@code /shulkermod} shows what the
- * mod knows about the box you look at.
+ * Shulker Styles client. Talks to the plugin (hello, then asks about every shulker box in range and keeps the
+ * answers, which the server updates) and draws banner patterns on placed boxes and box items ({@code render/},
+ * {@code mixin/}). {@code /shulkermod} shows what the mod knows about the box you look at.
  */
 public final class ShulkerStylesClient implements ClientModInitializer {
 	public static final Logger LOG = LoggerFactory.getLogger("shulkerstyles");
@@ -49,7 +49,7 @@ public final class ShulkerStylesClient implements ClientModInitializer {
 				if (serverProtocol != Protocol.VERSION) LOG.warn("Server speaks Shulker Styles protocol {}, this mod {}: boxes won't be styled", serverProtocol, Protocol.VERSION);
 			},
 			Protocol.BOX, data -> BOXES.onBox(Protocol.readBox(data))));
-		ClientPlayConnectionEvents.JOIN.register((listener, sender, client) -> reset());
+		ClientPlayConnectionEvents.JOIN.register((listener, sender, client) -> { reset(); dev.whizzle.shulker.client.render.Patterns.reload(); });
 		ClientPlayConnectionEvents.DISCONNECT.register((listener, client) -> reset());
 		ServerboundPlayChannelEvents.REGISTER.register((listener, sender, client, channels) -> {
 			if (channels.contains(Identifier.fromNamespaceAndPath(Protocol.NAMESPACE, Protocol.HELLO))) Net.send(Protocol.HELLO, Protocol.hello());

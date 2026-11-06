@@ -7,6 +7,7 @@
 	"authors": ["tedtalksbits"],
 	"license": "All-Rights-Reserved",
 	"environment": "client",
+	"mixins": ["shulkerstyles.mixins.json"],
 	"entrypoints": {
 		"client": ["dev.whizzle.shulker.client.ShulkerStylesClient"]
 	},

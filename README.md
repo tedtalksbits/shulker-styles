@@ -24,8 +24,9 @@ crafter paths on a real server; the player paths are in `docs/TEST_PLAN.md`.)
 
 ## Status
 
-Slice 1 (server side) done: recipe, storage, washing, icon, protocol. The mod connects and knows every box's style
-(`/shulkermod` shows it) but **draws nothing yet**: patterns come in slice 2, labels in slice 3.
+Slice 1 (server side) done: recipe, storage, washing, icon, protocol. Slice 2: the mod draws the patterns on placed
+boxes and box items (each face shows the middle square of the banner's pattern); not yet seen in a game. Labels
+(name and icon) come in slice 3.
 
 ## Layout
 

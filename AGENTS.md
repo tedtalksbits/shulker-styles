@@ -12,10 +12,22 @@ plugin (their patterns were copied, their files never edited).
 - `shulker-plugin/`: Paper plugin (Java 25). Stores everything, works without the mod.
 - `shulker-plugin/src/main/java/dev/whizzle/shulker/model/`: pure Java (`Protocol`, `BoxInfo`, `Layer`, `Icons`,
   `Wire`), **compiled into both** the plugin and the mod (`fabric-client/build.gradle`). Change it once.
-- `fabric-client/`: Fabric client mod. Separate Gradle build.
+- `fabric-client/`: Fabric client mod. Separate Gradle build. `render/` draws patterns, `mixin/` hooks them into
+  vanilla's shulker box renderer and item model types; `assets/minecraft/items/*_shulker_box.json` switch the box
+  items to the mod's item model type.
 - `paper-selftest/`: development-only plugin that checks the plugin on a real Paper server.
 
-## Status (2026-11-05)
+## Status (2026-11-06)
+
+- **Slice 2 (patterns drawn) built, not yet seen in a game.** Client 0.2.0 (plugin unchanged, 0.1.0; protocol 1).
+  - Placed boxes: the layers the server reported are drawn over the box, the lid's part moving with the lid.
+  - Items (inventory, hand, dropped, item frames): from the item's own `banner_patterns`.
+  - How: each layer is one more pass of vanilla's own (posed) shulker box model with a mask texture: the banner
+    pattern laid out on the box texture at 4x (`MaskLayout`), tinted with the dye colour, render type
+    `bannerPattern`, as shields draw theirs. Mixins: `ShulkerBoxRendererMixin` (render state + after the model),
+    `ShulkerBoxRenderStateMixin`, `SpecialModelRenderersMixin` (item model type `shulkerstyles:shulker_box`).
+  - Checked here: mixin targets against the 26.3 classes, `MaskLayout` unit tests (5) and a picture of the real
+    creeper pattern laid on the real lime box texture. **Not checked: anything on screen** (no 26.3 client here).
 
 - **Slice 1 (server side) done, not yet playtested.** Plugin 0.1.0, client 0.1.0, protocol 1.
   - Recipe: box + patterned banner, shapeless, crafting grids and crafters (`BannerRecipe`).
@@ -36,9 +48,8 @@ plugin (their patterns were copied, their files never edited).
 
 ## Open items
 
-1. Slice 2: draw patterns on placed boxes (moving with the lid) and on box items (inventory, hand, dropped). First
-   read how 26.3 draws shulker boxes (block entity renderer, the item's special model renderer) and banners/shields
-   (pattern layers).
+1. Slice 2 needs the owner's in-game check (`docs/TEST_PLAN.md` tests 18-27), then fixes from his screenshots
+   (likely suspects: a face mirrored, layer order, z-fighting, brightness).
 2. Slice 3: labels (name + icon) on placed boxes and items; settings screen (on/off, distance). **Decision 4 (where
    labels show) is still open:** show the owner mockups first. Suggested: the side the box opens toward, and the lid.
 3. Slice 3: the icon button in the box's screen (decision table). Needs a new client->server message (set the icon
@@ -60,6 +71,10 @@ plugin (their patterns were copied, their files never edited).
 | Drops restored per path: `BlockDropItemEvent` (player), `BlockBreakBlockEvent` (piston), explosion records matched in `ItemSpawnEvent`, and a fallback in `ItemSpawnEvent` matching a still-present box by position, type and exact contents | Each path fires different events; the self-test proves them |
 | Protocol: answer per position, then push changes for watched positions (5-tick poll), range 64 | Kickoff shape (Logic Blocks); polling catches every change source (hoppers, commands, other plugins); 64 is vanilla's shulker box render distance |
 | Name sent as plain text | Anvil names are plain; simpler for the renderer |
+| Pattern fit on a box face: the middle square of the banner pattern (rows 10-29 of 40), on all four sides, the lid's top and the base's bottom; lid and base share one continuous picture | Owner picked "B: square crop" from mockups of A squashed / B crop / C strip |
+| Patterns drawn as extra passes of vanilla's posed box model with per-pattern mask textures (4x the box texture), tinted per layer | Same technique as shields; follows the lid for free; one mask per pattern, cached |
+| Mask skips the box texture's see-through pixels | A pattern must not fill the box's gaps |
+| Box items switch to the mod's item model type by overriding vanilla's 17 `items/*_shulker_box.json` in the mod's resources | 26.3's shulker item renderer takes no item data; a new type can read `banner_patterns` like the shield's |
 | Release tag = plugin version; the client keeps its own version; both jars in each release | Same as Blueprints and Logic Blocks |
 
 ## Working rules
@@ -90,6 +105,10 @@ plugin (their patterns were copied, their files never edited).
 
 ## Gotchas
 
+- Box item model override: a resource pack that replaces `items/*_shulker_box.json` wins over the mod's, and then
+  box items show no patterns (placed boxes still do).
+- Masks are made from the current resource packs on first use and again on joining a server, not when resource
+  packs change mid-game (F3+T).
 - MockBukkit has no live block entities: `getState(false)` is a snapshot, `isSnapshot()` is unimplemented, and
   items stored in inventories lose data components. Test placed-box code in the self-test; `ClientBridge` takes a
   lookup function so tests can fake the world.
@@ -111,6 +130,8 @@ plugin (their patterns were copied, their files never edited).
   `.tools/jdk` is a Windows JDK.
 - Staging: files must be in a connected folder and at most 400 MB each; split big tars. Stage into
   `shulker-styles\.tools\stage\` (gitignored) and delete it afterwards.
+- Decompile with `procyon` (`apt-get install procyon-decompiler`) on classes from Loom's
+  `caches/fabric-loom/26.3/minecraft-merged.jar`; vanilla assets are in `minecraft-client.jar`.
 - The Fabric client's tests need LWJGL/jtracy natives for Linux that a Windows-built cache lacks: run its pure-Java
   tests in a plain-JUnit Gradle build of `model/**` + the class under test.
 - Paper offline: copy `paper-26.3-211.jar` with `cache/`, `versions/` and `libraries/` from the owner's server.

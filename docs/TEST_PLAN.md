@@ -1,8 +1,8 @@
-# Test plan: Shulker Styles, slice 1 (server side)
+# Test plan: Shulker Styles
 
-The server side passed the real-Paper self-test (crafter, dispenser, breakNaturally, piston, TNT, explosions,
-info, wash). Nothing here has been seen in a real game yet. The mod **draws nothing yet**; use `/shulkermod` (mod)
-and `/shulkerstyles info` (plugin) to see what each side knows.
+Slice 1 (server side, tests 1-17) passed the real-Paper self-test; in a game, tests 2 and 5 passed. Slice 2 (patterns
+drawn by the mod, client 0.2.0, tests 18-27) is new and **hasn't been seen on screen yet**: please send screenshots.
+`/shulkermod` (mod) and `/shulkerstyles info` (plugin) show what each side knows.
 
 ## Setup (once, about 5 minutes)
 
@@ -13,8 +13,6 @@ and `/shulkerstyles info` (plugin) to see what each side knows.
 3. Launch **fabric-loader-26.3** and join. Make a couple of patterned banners in a loom (a red creeper on white, a
    blue border on black). The recipe needs a **banner** with patterns, not a banner pattern item (the loom template,
    whose icon also shows a creeper).
-
-The mod draws nothing yet: boxes look the same as before. That's slice 2.
 
 ## Tests
 
@@ -38,6 +36,23 @@ The mod draws nothing yet: boxes look the same as before. That's slice 2.
 | 16 | A dispenser facing open air, a patterned box inside, a button. Press it, then break the box | Placed, and drops with its patterns. |
 | 17 | Join with a client **without** the mod (or have someone do it) | Boxes look and work as normal; no errors. |
 
+### Slice 2: patterns drawn (client 0.2.0)
+
+Each face shows the middle square of the banner's pattern (your pick "B"). Screenshots of 18, 20, 21 and 22 please.
+
+| # | Do this | Expect |
+|---|---|---|
+| 18 | Look at the patterned box in your **inventory** and **hotbar** | The pattern shows on the box icon, in the dye colour, over the box's own colour. |
+| 19 | Hold it in your hand (first person, then F5 third person), drop it on the ground | The pattern shows in every view. |
+| 20 | **Place** it and walk around it | The pattern on all four sides and on top. Not flickering at any angle. A creeper face is upright and not mirrored. |
+| 21 | Open it (right-click) and watch the lid from the side | The lid's part of the picture rises and twists with the lid; the inside stays plain. |
+| 22 | A wall of a few boxes with different banners (two or more layers on one, a gradient on one) | Layers stack in loom order; the gradient fades smoothly. Easy to tell apart at a glance? |
+| 23 | Place a plain box next to them | No pattern. |
+| 24 | Wash a placed-then-picked-up box in the cauldron, place it again | One layer fewer on the item at once, and on the placed box. |
+| 25 | Place a patterned box on a wall (sideways) and on a ceiling | The pattern follows the box (sideways it lies sideways, like the lid). |
+| 26 | Walk 70 blocks away and back | Far away the box disappears as in vanilla; back in range the pattern is there again within a second. |
+| 27 | Break a placed patterned box and put a **plain** box in the same spot | The new plain box shows no pattern (no leftovers). |
+
 ## ⚠️ Known limits and decisions for you
 
 1. **Choosing the icon is a command for now** (`/shulkerstyles icon`, item in the off hand). Slice 3 adds the button
@@ -48,5 +63,9 @@ The mod draws nothing yet: boxes look the same as before. That's slice 2.
 4. **Players without the mod see patterns only in the box's tooltip** (vanilla lists them) and through
    `/shulkerstyles info`, not on the box itself.
 5. **Where labels show on a placed box (decision 4) is still open.** I'll bring mockups with slice 3.
-6. Not checked by the self-test, only by you: a player breaking a box (tests 8-9), the crafting grids (2-3), the
+6. Not checked by the self-test, only by you: a player breaking a box (tests 8-9), the crafting grids (3), the
    cauldron click (13-14), Ctrl+middle-click (10), and the mod's handshake and live updates (1, 6-7, 11-12).
+7. **Nothing in slice 2 has been seen on screen** (the cloud workspace can't run the 26.3 client). The pattern
+   layout was checked against the real textures; how it looks in game is up to your screenshots.
+8. **A resource pack that changes shulker box items** would hide the patterns on items (placed boxes still show
+   them). Changing resource packs mid-game (F3+T) keeps the old pattern pictures until you rejoin.
