@@ -1,0 +1,19 @@
+{
+	"schemaVersion": 1,
+	"id": "shulkerstyles",
+	"version": "${version}",
+	"name": "Shulker Styles",
+	"description": "Banner patterns and labels on shulker boxes, for servers running the Shulker Styles plugin.",
+	"authors": ["tedtalksbits"],
+	"license": "All-Rights-Reserved",
+	"environment": "client",
+	"entrypoints": {
+		"client": ["dev.whizzle.shulker.client.ShulkerStylesClient"]
+	},
+	"depends": {
+		"fabricloader": ">=0.19.5",
+		"minecraft": "~26.3",
+		"java": ">=25",
+		"fabric-api": "*"
+	}
+}

@@ -1,0 +1,102 @@
+package dev.whizzle.shulker.client;
+
+import dev.whizzle.shulker.client.net.Net;
+import dev.whizzle.shulker.model.BoxInfo;
+import dev.whizzle.shulker.model.Protocol;
+import dev.whizzle.shulker.model.Protocol.Pos;
+import net.fabricmc.api.ClientModInitializer;
+import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback;
+import net.fabricmc.fabric.api.client.command.v2.ClientCommands;
+import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
+import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
+import net.fabricmc.fabric.api.client.networking.v1.ServerboundPlayChannelEvents;
+import net.minecraft.client.Minecraft;
+import net.minecraft.core.BlockPos;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.Identifier;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.entity.ShulkerBoxBlockEntity;
+import net.minecraft.world.level.chunk.LevelChunk;
+import net.minecraft.world.level.chunk.status.ChunkStatus;
+import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.HitResult;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
+/**
+ * Shulker Styles client. Slice 1: talks to the plugin (hello, then asks about every shulker box in range and keeps
+ * the answers, which the server updates). Drawing patterns and labels comes next; {@code /shulkermod} shows what the
+ * mod knows about the box you look at.
+ */
+public final class ShulkerStylesClient implements ClientModInitializer {
+	public static final Logger LOG = LoggerFactory.getLogger("shulkerstyles");
+	public static final BoxCache BOXES = new BoxCache();
+	/** From the server's welcome; 0 until it answers (or when the server doesn't have the plugin). */
+	static int serverProtocol, range;
+	private static long ticks;
+
+	@Override
+	public void onInitializeClient() {
+		Net.register(Map.of(
+			Protocol.WELCOME, data -> {
+				Protocol.Welcome w = Protocol.readWelcome(data);
+				serverProtocol = w.protocol();
+				range = w.range();
+				if (serverProtocol != Protocol.VERSION) LOG.warn("Server speaks Shulker Styles protocol {}, this mod {}: boxes won't be styled", serverProtocol, Protocol.VERSION);
+			},
+			Protocol.BOX, data -> BOXES.onBox(Protocol.readBox(data))));
+		ClientPlayConnectionEvents.JOIN.register((listener, sender, client) -> reset());
+		ClientPlayConnectionEvents.DISCONNECT.register((listener, client) -> reset());
+		ServerboundPlayChannelEvents.REGISTER.register((listener, sender, client, channels) -> {
+			if (channels.contains(Identifier.fromNamespaceAndPath(Protocol.NAMESPACE, Protocol.HELLO))) Net.send(Protocol.HELLO, Protocol.hello());
+		});
+		ClientTickEvents.END_CLIENT_TICK.register(ShulkerStylesClient::tick);
+		ClientCommandRegistrationCallback.EVENT.register((dispatcher, context) ->
+			dispatcher.register(ClientCommands.literal("shulkermod").executes(c -> { status(c.getSource().getClient()); return 1; })));
+	}
+
+	static void reset() { serverProtocol = 0; range = 0; BOXES.clear(); }
+
+	static boolean active() { return serverProtocol == Protocol.VERSION && range > 0; }
+
+	/** Every 10 ticks: forget boxes out of range, ask about new ones. */
+	static void tick(Minecraft mc) {
+		if (++ticks % 10 != 0 || !active() || mc.level == null || mc.player == null) return;
+		BlockPos me = mc.player.blockPosition();
+		long r2 = (long) range * range;
+		BOXES.retain(p -> me.distSqr(new BlockPos(p.x(), p.y(), p.z())) <= r2);
+		List<Pos> visible = new ArrayList<>();
+		int cr = (range >> 4) + 1;
+		for (int cx = (me.getX() >> 4) - cr; cx <= (me.getX() >> 4) + cr; cx++)
+			for (int cz = (me.getZ() >> 4) - cr; cz <= (me.getZ() >> 4) + cr; cz++) {
+				LevelChunk chunk = mc.level.getChunkSource().getChunk(cx, cz, ChunkStatus.FULL, false);
+				if (chunk == null) continue;
+				for (BlockEntity be : chunk.getBlockEntities().values()) {
+					if (!(be instanceof ShulkerBoxBlockEntity)) continue;
+					BlockPos p = be.getBlockPos();
+					if (me.distSqr(p) <= r2) visible.add(new Pos(p.getX(), p.getY(), p.getZ()));
+				}
+			}
+		for (byte[] q : BoxCache.queries(BOXES.toAsk(visible, ticks))) Net.send(Protocol.QUERY, q);
+	}
+
+	static void status(Minecraft mc) {
+		if (mc.player == null) return;
+		if (serverProtocol == 0) { mc.player.sendSystemMessage(Component.literal("Shulker Styles: this server doesn't run the plugin (no answer).")); return; }
+		if (!active()) { mc.player.sendSystemMessage(Component.literal("Shulker Styles: server protocol " + serverProtocol + ", mod " + Protocol.VERSION + ". Update the older one.")); return; }
+		mc.player.sendSystemMessage(Component.literal("Shulker Styles: connected (range " + range + ", " + BOXES.size() + " boxes known)."));
+		if (!(mc.hitResult instanceof BlockHitResult hit) || hit.getType() != HitResult.Type.BLOCK) return;
+		BlockPos p = hit.getBlockPos();
+		BoxInfo info = BOXES.get(new Pos(p.getX(), p.getY(), p.getZ()));
+		if (info == null) { mc.player.sendSystemMessage(Component.literal("  Looking at: nothing known (not a shulker box, or not answered yet).")); return; }
+		StringBuilder layers = new StringBuilder();
+		for (var l : info.layers()) layers.append(layers.isEmpty() ? "" : ", ").append(l.colorName()).append(' ').append(l.pattern().replace("minecraft:", ""));
+		mc.player.sendSystemMessage(Component.literal("  Patterns: " + (layers.isEmpty() ? "none" : layers)));
+		mc.player.sendSystemMessage(Component.literal("  Name: " + (info.name().isEmpty() ? "none" : info.name())));
+		mc.player.sendSystemMessage(Component.literal("  Icon: " + (info.icon().isEmpty() ? "none" : info.icon() + (info.iconChosen() ? " (chosen)" : " (most common inside)"))));
+	}
+}
