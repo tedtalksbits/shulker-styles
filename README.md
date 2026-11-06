@@ -19,7 +19,8 @@ By **tedtalksbits**. Minecraft / Paper 26.3.
 - `/shulkerstyles info`: what the box you hold or look at carries (also works without the mod).
 
 The style stays with the box when it's broken (survival or creative), broken by a piston or an explosion, placed by
-a dispenser, or picked with Ctrl+middle-click.
+a dispenser, or picked with Ctrl+middle-click. (The self-test proves the piston, explosion, dispenser and
+crafter paths on a real server; the player paths are in `docs/TEST_PLAN.md`.)
 
 ## Status
 
