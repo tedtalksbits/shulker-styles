@@ -1,6 +1,7 @@
 package dev.whizzle.shulker.client.mixin;
 
 import com.mojang.blaze3d.vertex.PoseStack;
+import dev.whizzle.shulker.client.render.PatternHolder;
 import dev.whizzle.shulker.client.render.PatternLayer;
 import dev.whizzle.shulker.client.render.Patterns;
 import net.minecraft.client.model.Model;

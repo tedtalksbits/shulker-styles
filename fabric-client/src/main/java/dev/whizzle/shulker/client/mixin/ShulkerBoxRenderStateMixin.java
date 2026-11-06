@@ -1,5 +1,6 @@
 package dev.whizzle.shulker.client.mixin;
 
+import dev.whizzle.shulker.client.render.PatternHolder;
 import dev.whizzle.shulker.client.render.PatternLayer;
 import net.minecraft.client.renderer.blockentity.state.ShulkerBoxRenderState;
 import org.spongepowered.asm.mixin.Mixin;

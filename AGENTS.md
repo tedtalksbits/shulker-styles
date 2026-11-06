@@ -19,15 +19,18 @@ plugin (their patterns were copied, their files never edited).
 
 ## Status (2026-11-06)
 
-- **Slice 2 (patterns drawn) built, not yet seen in a game.** Client 0.2.0 (plugin unchanged, 0.1.0; protocol 1).
+- **Slice 2 (patterns drawn) built, not yet seen in a game.** Client 0.2.1 (plugin unchanged, 0.1.0; protocol 1).
   - Placed boxes: the layers the server reported are drawn over the box, the lid's part moving with the lid.
   - Items (inventory, hand, dropped, item frames): from the item's own `banner_patterns`.
   - How: each layer is one more pass of vanilla's own (posed) shulker box model with a mask texture: the banner
     pattern laid out on the box texture at 4x (`MaskLayout`), tinted with the dye colour, render type
     `bannerPattern`, as shields draw theirs. Mixins: `ShulkerBoxRendererMixin` (render state + after the model),
     `ShulkerBoxRenderStateMixin`, `SpecialModelRenderersMixin` (item model type `shulkerstyles:shulker_box`).
-  - Checked here: mixin targets against the 26.3 classes, `MaskLayout` unit tests (5) and a picture of the real
-    creeper pattern laid on the real lime box texture. **Not checked: anything on screen** (no 26.3 client here).
+  - Checked here: `ci/mixin-audit/run.sh` (every mixin applied in a real Fabric Loader, no game started),
+    `MaskLayout` unit tests, `MixinPackageTest`, and a picture of the real creeper pattern laid on the real lime box
+    texture. **Not checked: anything on screen** (no 26.3 client here).
+  - Client 0.2.0 as first delivered gave the owner a black screen: a helper interface sat in the mixin package
+    (Mixin refuses to load non-mixins from it). Fixed in 0.2.1; the audit and `MixinPackageTest` now catch it.
 
 - **Slice 1 (server side) done, not yet playtested.** Plugin 0.1.0, client 0.1.0, protocol 1.
   - Recipe: box + patterned banner, shapeless, crafting grids and crafters (`BannerRecipe`).
@@ -92,6 +95,9 @@ plugin (their patterns were copied, their files never edited).
 
 - Plugin: `gradlew build` at the root (Java 25, Gradle 9.8.0). Jar: `shulker-plugin/build/libs/shulker-plugin-<v>.jar`.
 - Client: `cd fabric-client && gradlew build`. Jar: `fabric-client/build/libs/shulker-styles-client-<v>.jar`.
+- Mixin audit: `ci/mixin-audit/run.sh` (Linux, CI; offline add `--offline -I <init script>` and set
+  `GRADLE_USER_HOME`): starts Fabric Loader with the mod, applies every mixin, exits before the game. Prints
+  `AUDIT RESULT OK` or fails.
 - Self-test: `ci/run-selftest.sh <paper.jar> <new-folder>` (Linux, Git Bash, CI): a throwaway flat-world server
   with `-Dshulker.selftest.exit=true`; fails unless `plugins/ShulkerStylesSelfTest/report.txt` ends
   `SELFTEST PASSED`. Offline: `PAPER_SEED_DIR=<existing server folder>`. `SELFTEST_ONLY=explosion,piston` runs only
@@ -105,6 +111,8 @@ plugin (their patterns were copied, their files never edited).
 
 ## Gotchas
 
+- **Only mixins in `client/mixin/`.** Duck interfaces and helpers go elsewhere (`client/render/`), or the game
+  fails to load resources (black screen). Run `ci/mixin-audit/run.sh` after any mixin change; CI runs it too.
 - Box item model override: a resource pack that replaces `items/*_shulker_box.json` wins over the mod's, and then
   box items show no patterns (placed boxes still do).
 - Masks are made from the current resource packs on first use and again on joining a server, not when resource

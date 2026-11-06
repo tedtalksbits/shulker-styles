@@ -1,7 +1,7 @@
 # Test plan: Shulker Styles
 
 Slice 1 (server side, tests 1-17) passed the real-Paper self-test; in a game, tests 2 and 5 passed. Slice 2 (patterns
-drawn by the mod, client 0.2.0, tests 18-27) is new and **hasn't been seen on screen yet**: please send screenshots.
+drawn by the mod, client 0.2.1, tests 18-27) is new and **hasn't been seen on screen yet**: please send screenshots.
 `/shulkermod` (mod) and `/shulkerstyles info` (plugin) show what each side knows.
 
 ## Setup (once, about 5 minutes)
@@ -36,7 +36,7 @@ drawn by the mod, client 0.2.0, tests 18-27) is new and **hasn't been seen on sc
 | 16 | A dispenser facing open air, a patterned box inside, a button. Press it, then break the box | Placed, and drops with its patterns. |
 | 17 | Join with a client **without** the mod (or have someone do it) | Boxes look and work as normal; no errors. |
 
-### Slice 2: patterns drawn (client 0.2.0)
+### Slice 2: patterns drawn (client 0.2.1)
 
 Each face shows the middle square of the banner's pattern (your pick "B"). Screenshots of 18, 20, 21 and 22 please.
 

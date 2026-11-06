@@ -1,6 +1,6 @@
 # Builds and tests Shulker Styles on every push to main and every pull request:
 #   plugin:   Paper plugin + self-test plugin, unit tests (MockBukkit)
-#   client:   Fabric client mod, unit tests
+#   client:   Fabric client mod, unit tests, mixin audit
 #   selftest: the self-test on a real Paper server (paper-selftest/, ci/run-selftest.sh)
 # The jars are attached to each run (Actions tab > the run > Artifacts). Nothing is deployed anywhere.
 # release.yml reuses this workflow before publishing a release.
@@ -127,6 +127,9 @@ jobs:
       - uses: gradle/actions/setup-gradle@v6
       - name: Build and test
         run: ./gradlew build --stacktrace
+      - name: Mixin audit (applies every mixin without starting the game)
+        working-directory: .
+        run: ci/mixin-audit/run.sh
       - name: Test reports
         if: failure()
         uses: actions/upload-artifact@v7

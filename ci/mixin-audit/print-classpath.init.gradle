@@ -1,0 +1,5 @@
+allprojects { afterEvaluate { p -> if (p.plugins.hasPlugin('java')) p.tasks.register('printRuntimeCp') { doLast {
+  def libs = p.configurations.runtimeClasspath.incoming.artifactView { lenient = true }.files.files
+  def outs = p.sourceSets.main.output.files
+  new File(System.getProperty('cpfile')).text = (outs + libs).join(':')
+} } } }
