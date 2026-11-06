@@ -1,0 +1,16 @@
+name: ShulkerStyles
+version: '${version}'
+main: dev.whizzle.shulker.ShulkerStylesPlugin
+api-version: '26.3'
+description: Banner patterns and labels on shulker boxes (drawn by the Shulker Styles client mod).
+author: tedtalksbits
+commands:
+  shulkerstyles:
+    description: Shulker Styles help, label icon and info
+    usage: /shulkerstyles [icon [clear] | info]
+    aliases: [shulker]
+    permission: shulkerstyles.use
+permissions:
+  shulkerstyles.use:
+    description: Use /shulkerstyles.
+    default: true

@@ -1,0 +1,5 @@
+# Shulker Styles
+
+# How far from a player (in blocks) the server tells their mod about shulker boxes. Minecraft draws shulker boxes up
+# to 64 blocks away, so more than 64 shows nothing extra. 8-256.
+range: 64

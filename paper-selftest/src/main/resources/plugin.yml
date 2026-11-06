@@ -1,0 +1,6 @@
+name: ShulkerStylesSelfTest
+version: dev
+main: dev.whizzle.shulker.selftest.SelfTestPlugin
+api-version: '26.3'
+depend: [ShulkerStyles]
+description: Development-only checks of Shulker Styles on a real Paper server.
