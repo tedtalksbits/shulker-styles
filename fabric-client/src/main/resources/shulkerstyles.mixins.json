@@ -3,6 +3,8 @@
 	"package": "dev.whizzle.shulker.client.mixin",
 	"compatibilityLevel": "JAVA_25",
 	"client": [
+		"ContainerScreenAccessor",
+		"GuiGraphicsExtractorMixin",
 		"ShulkerBoxRenderStateMixin",
 		"ShulkerBoxRendererMixin",
 		"SpecialModelRenderersMixin"

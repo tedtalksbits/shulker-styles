@@ -25,7 +25,8 @@ public final class ClientBridge implements PluginMessageListener, Listener {
     public static final List<String> INCOMING = Protocol.SERVERBOUND.stream().map(Protocol::channel).toList();
     public static final List<String> OUTGOING = Protocol.CLIENTBOUND.stream().map(Protocol::channel).toList();
     static final String HELLO = Protocol.channel(Protocol.HELLO), QUERY = Protocol.channel(Protocol.QUERY),
-        WELCOME = Protocol.channel(Protocol.WELCOME), BOX = Protocol.channel(Protocol.BOX);
+        WELCOME = Protocol.channel(Protocol.WELCOME), BOX = Protocol.channel(Protocol.BOX),
+        OPENED = Protocol.channel(Protocol.OPENED), SETICON = Protocol.channel(Protocol.SETICON);
     /** Positions answered per player per second; a mod showing every box in view stays far below this. */
     static final int POSITIONS_PER_SECOND = 512;
     static final int MESSAGES_PER_SECOND = 40;
@@ -48,15 +49,39 @@ public final class ClientBridge implements PluginMessageListener, Listener {
         Watch(UUID world) { this.world = world; }
     }
 
-    private final java.util.function.Function<org.bukkit.block.Block, BoxInfo> lookup;
+    /** The world as the bridge sees it; tests substitute it (MockBukkit lacks live block entities). */
+    public interface Boxes {
+        /** What the mod should draw at a block; null if it isn't a shulker box. */
+        BoxInfo info(org.bukkit.block.Block block);
+        /** The placed shulker box whose screen the player has open, or null. */
+        org.bukkit.block.Block openBox(Player player);
+        /** Sets (item id) or clears (null) the chosen label icon of a placed box. */
+        void setIcon(org.bukkit.block.Block box, String item);
+        /** Whether an item id names a real item. */
+        boolean isItem(String id);
+    }
 
-    public ClientBridge(Outbox outbox, int range) { this(outbox, range, Styles::info); }
+    public static final Boxes REAL = new Boxes() {
+        @Override public BoxInfo info(org.bukkit.block.Block block) { return Styles.info(block); }
+        @Override public org.bukkit.block.Block openBox(Player player) {
+            var holder = player.getOpenInventory().getTopInventory().getHolder(false);
+            return holder instanceof org.bukkit.block.ShulkerBox box && box.isPlaced() ? box.getBlock() : null;
+        }
+        @Override public void setIcon(org.bukkit.block.Block box, String item) { Styles.storeIcon(box, item); }
+        @Override public boolean isItem(String id) {
+            org.bukkit.Material m = org.bukkit.Material.matchMaterial(id);
+            return m != null && m.isItem() && !m.isAir();
+        }
+    };
 
-    /** {@code lookup} reads what the mod should draw at a block; tests substitute it (MockBukkit lacks live block entities). */
-    public ClientBridge(Outbox outbox, int range, java.util.function.Function<org.bukkit.block.Block, BoxInfo> lookup) {
+    private final Boxes boxes;
+
+    public ClientBridge(Outbox outbox, int range) { this(outbox, range, REAL); }
+
+    public ClientBridge(Outbox outbox, int range, Boxes boxes) {
         this.outbox = outbox;
         this.range = range;
-        this.lookup = lookup;
+        this.boxes = boxes;
     }
 
     public int range() { return range; }
@@ -76,6 +101,8 @@ public final class ClientBridge implements PluginMessageListener, Listener {
                 List<Pos> positions = Protocol.readQuery(message);
                 if ((w.positions += positions.size()) > POSITIONS_PER_SECOND) return;
                 for (Pos pos : positions) answer(player, w, pos);
+            } else if (channel.equals(SETICON)) {
+                setIcon(player, Protocol.readSetIcon(message));
             }
         } catch (IllegalArgumentException ignored) {
             // A malformed message from a modified client: ignore it.
@@ -99,11 +126,38 @@ public final class ClientBridge implements PluginMessageListener, Listener {
     void answer(Player p, Watch w, Pos pos) {
         World world = p.getWorld();
         if (!inRange(p, pos, 0) || !world.isChunkLoaded(pos.x() >> 4, pos.z() >> 4)) return;
-        BoxInfo info = lookup.apply(world.getBlockAt(pos.x(), pos.y(), pos.z()));
+        BoxInfo info = boxes.info(world.getBlockAt(pos.x(), pos.y(), pos.z()));
         w.sent.remove(pos);
         w.sent.put(pos, Optional.ofNullable(info));
         while (w.sent.size() > MAX_WATCHED) w.sent.remove(w.sent.keySet().iterator().next());
         outbox.send(p, BOX, Protocol.box(pos, info));
+    }
+
+    /**
+     * Sets the label icon of the box the player has open. Ignored unless {@code pos} is that box and the item is real,
+     * so a modified client can only change a box it could open anyway. The change reaches every watching mod through
+     * the next {@link #poll()}.
+     */
+    void setIcon(Player p, Protocol.SetIcon request) {
+        org.bukkit.block.Block open = boxes.openBox(p);
+        Pos pos = request.pos();
+        if (open == null || open.getX() != pos.x() || open.getY() != pos.y() || open.getZ() != pos.z()) return;
+        String item = request.item().isEmpty() ? null : request.item();
+        if (item != null && !boxes.isItem(item)) return;
+        boxes.setIcon(open, item == null ? null : org.bukkit.NamespacedKey.fromString(item).toString());
+    }
+
+    /** A player opened a placed box: their mod needs its position for the icon slot. */
+    @EventHandler(priority = org.bukkit.event.EventPriority.MONITOR, ignoreCancelled = true)
+    public void onOpen(org.bukkit.event.inventory.InventoryOpenEvent e) {
+        if (!(e.getPlayer() instanceof Player p)) return;
+        if (!(e.getInventory().getHolder(false) instanceof org.bukkit.block.ShulkerBox box) || !box.isPlaced()) return;
+        opened(p, new Pos(box.getX(), box.getY(), box.getZ()));
+    }
+
+    void opened(Player p, Pos pos) {
+        answer(p, watch(p), pos);   // make sure the mod knows this box (and keeps it up to date)
+        outbox.send(p, OPENED, Protocol.opened(pos));
     }
 
     /** Runs every few ticks: pushes changes at watched positions and stops watching what's out of range. */
@@ -121,7 +175,7 @@ public final class ClientBridge implements PluginMessageListener, Listener {
                 Map.Entry<Pos, Optional<BoxInfo>> e = it.next();
                 Pos pos = e.getKey();
                 if (!inRange(p, pos, 16) || !world.isChunkLoaded(pos.x() >> 4, pos.z() >> 4)) { it.remove(); continue; }
-                Optional<BoxInfo> now = Optional.ofNullable(lookup.apply(world.getBlockAt(pos.x(), pos.y(), pos.z())));
+                Optional<BoxInfo> now = Optional.ofNullable(boxes.info(world.getBlockAt(pos.x(), pos.y(), pos.z())));
                 if (!now.equals(e.getValue())) {
                     e.setValue(now);
                     outbox.send(p, BOX, Protocol.box(pos, now.orElse(null)));

@@ -1,4 +1,4 @@
-# Client <-> server protocol (v1)
+# Client <-> server protocol (v2)
 
 Plugin messages on `shulkerstyles:*` channels. Encoding is Minecraft's `FriendlyByteBuf` style: VarInt, big-endian
 Int32, Bool (1 byte), String (VarInt byte length + UTF-8). Both sides use the shared `dev.whizzle.shulker.model`
@@ -10,6 +10,8 @@ classes (`Wire`, `Protocol`, `BoxInfo`, `Layer`), compiled into the plugin and t
 | `shulkerstyles:welcome` | S->C | VarInt protocol, VarInt range (blocks) |
 | `shulkerstyles:query` | C->S | VarInt n (1-64), n x (Int32 x, y, z) |
 | `shulkerstyles:box` | S->C | Int32 x, y, z, Bool is a box, then if so a **BoxInfo** |
+| `shulkerstyles:opened` | S->C | Int32 x, y, z: the placed box whose screen the player just opened (v2) |
+| `shulkerstyles:seticon` | C->S | Int32 x, y, z, String item id (`minecraft:diamond`; "" = automatic) (v2) |
 
 **BoxInfo**: VarInt layer count (0-16), each layer = String pattern id (`minecraft:creeper`), VarInt dye id (0 white,
 1 orange, 2 magenta, 3 light_blue, 4 yellow, 5 lime, 6 pink, 7 gray, 8 light_gray, 9 cyan, 10 purple, 11 blue,
@@ -29,8 +31,14 @@ banners.
   what it last sent, and sends a new `box` when it changed (box placed, broken, styled, renamed, contents changed the
   icon). Watching stops, silently, once the player is more than `range` + 16 blocks away, the chunk unloads or the
   player changes world; the client forgets positions beyond `range` and asks again when it comes back.
+- **Icon slot (v2).** When a player opens a placed box, the server sends `box` for it (and watches it) and then
+  `opened`; the mod shows the icon slot for that position until the screen closes. `seticon` is applied only if the
+  position is the box that player has open right now and the id names a real item; the new icon reaches every mod
+  watching that box through the usual push. Anything else is ignored.
 - Limits per player: 40 messages and 512 positions per second, 2048 watched positions (oldest dropped). Anyone may
   ask. The answer includes the most common item inside, which a player could otherwise only see by opening the box.
+- History: v1 (plugin 0.1.0, client 0.1.0-0.2.2): hello, welcome, query, box. v2 (plugin 0.2.0, client 0.3.0): adds
+  opened and seticon.
 - Bump `Protocol.VERSION` when any message's bytes change (one constant, shared by both sides). Release the plugin
   and the mod together then.
 

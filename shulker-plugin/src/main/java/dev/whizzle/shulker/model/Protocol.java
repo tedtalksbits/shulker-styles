@@ -10,11 +10,11 @@ import java.util.List;
 public final class Protocol {
     private Protocol() {}
 
-    public static final int VERSION = 1;
+    public static final int VERSION = 2;
     public static final String NAMESPACE = "shulkerstyles";
-    public static final String HELLO = "hello", WELCOME = "welcome", QUERY = "query", BOX = "box";
-    public static final List<String> SERVERBOUND = List.of(HELLO, QUERY);
-    public static final List<String> CLIENTBOUND = List.of(WELCOME, BOX);
+    public static final String HELLO = "hello", WELCOME = "welcome", QUERY = "query", BOX = "box", OPENED = "opened", SETICON = "seticon";
+    public static final List<String> SERVERBOUND = List.of(HELLO, QUERY, SETICON);
+    public static final List<String> CLIENTBOUND = List.of(WELCOME, BOX, OPENED);
     /** Most positions in one query. */
     public static final int MAX_QUERY = 64;
 
@@ -72,5 +72,28 @@ public final class Protocol {
         BoxInfo info = in.bool() ? BoxInfo.read(in) : null;
         in.end();
         return new Box(pos, info);
+    }
+
+    // ---- opened (S->C): Int32 x, y, z: the placed box whose screen the player just opened ----
+    public static byte[] opened(Pos pos) { return new Wire.Writer().int32(pos.x()).int32(pos.y()).int32(pos.z()).bytes(); }
+    public static Pos readOpened(byte[] data) {
+        Wire.Reader in = new Wire.Reader(data);
+        Pos p = new Pos(in.int32(), in.int32(), in.int32());
+        in.end();
+        return p;
+    }
+
+    /** A request to set the label icon of the open box at {@code pos}; {@code item} "" means automatic. */
+    public record SetIcon(Pos pos, String item) {}
+
+    // ---- seticon (C->S): Int32 x, y, z, String item id ("" = automatic) ----
+    public static byte[] setIcon(Pos pos, String item) {
+        return new Wire.Writer().int32(pos.x()).int32(pos.y()).int32(pos.z()).utf(item).bytes();
+    }
+    public static SetIcon readSetIcon(byte[] data) {
+        Wire.Reader in = new Wire.Reader(data);
+        SetIcon s = new SetIcon(new Pos(in.int32(), in.int32(), in.int32()), in.utf(128));
+        in.end();
+        return s;
     }
 }

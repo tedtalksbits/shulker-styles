@@ -107,6 +107,13 @@ public final class Styles {
         if (style.icon() == null) pdc.remove(ICON); else pdc.set(ICON, PersistentDataType.STRING, style.icon());
     }
 
+    /** Sets (item id) or clears (null) the chosen label icon of a placed box, keeping its patterns. */
+    public static void storeIcon(Block block, String icon) {
+        if (!(block.getState(false) instanceof ShulkerBox box)) return;
+        PersistentDataContainer pdc = box.getPersistentDataContainer();
+        if (icon == null) pdc.remove(ICON); else pdc.set(ICON, PersistentDataType.STRING, icon);
+    }
+
     /** Everything the mod draws for the box at {@code block}; null if it isn't a shulker box. */
     public static BoxInfo info(Block block) {
         if (!isBox(block.getType()) || !(block.getState(false) instanceof ShulkerBox box)) return null;

@@ -21,6 +21,8 @@ import static org.junit.jupiter.api.Assertions.*;
 class ClientBridgeTest {
     ServerMock server; WorldMock world; PlayerMock player; ClientBridge bridge;
     final Map<Pos, BoxInfo> boxes = new HashMap<>();
+    final Map<Pos, Optional<String>> icons = new HashMap<>();
+    Pos open;
     final List<String[]> sent = new ArrayList<>();
     final List<byte[]> bodies = new ArrayList<>();
     static final BoxInfo CREEPER = new BoxInfo(List.of(new Layer("minecraft:creeper", 5)), "Farm", "minecraft:wheat", false);
@@ -31,7 +33,12 @@ class ClientBridgeTest {
         player = server.addPlayer();
         player.teleport(new Location(world, 0.5, 70, 0.5));
         bridge = new ClientBridge((Player p, String channel, byte[] data) -> { sent.add(new String[]{p.getName(), channel}); bodies.add(data); }, 64,
-            (Block b) -> boxes.get(new Pos(b.getX(), b.getY(), b.getZ())));
+            new ClientBridge.Boxes() {
+                @Override public BoxInfo info(Block b) { return boxes.get(new Pos(b.getX(), b.getY(), b.getZ())); }
+                @Override public Block openBox(Player p) { return open == null ? null : world.getBlockAt(open.x(), open.y(), open.z()); }
+                @Override public void setIcon(Block b, String item) { icons.put(new Pos(b.getX(), b.getY(), b.getZ()), Optional.ofNullable(item)); }
+                @Override public boolean isItem(String id) { return id.equals("minecraft:diamond") || id.equals("diamond"); }
+            });
         for (int cx = -5; cx <= 5; cx++) for (int cz = -5; cz <= 5; cz++) world.loadChunk(cx, cz);
     }
     @AfterEach void tearDown() { MockBukkit.unmock(); }
@@ -110,5 +117,32 @@ class ClientBridgeTest {
         bridge.onPluginMessageReceived(ClientBridge.QUERY, player, new byte[]{5, 1});
         bridge.onPluginMessageReceived(ClientBridge.HELLO, player, new byte[0]);
         assertTrue(sent.isEmpty());
+    }
+
+    void setIcon(Pos pos, String item) { bridge.onPluginMessageReceived(ClientBridge.SETICON, player, Protocol.setIcon(pos, item)); }
+
+    @Test void setIconOnlyForTheOpenBox() {
+        Pos a = new Pos(3, 70, 3), b = new Pos(4, 70, 3);
+        setIcon(a, "minecraft:diamond");
+        assertTrue(icons.isEmpty(), "no box open");
+        open = a;
+        setIcon(b, "minecraft:diamond");
+        assertTrue(icons.isEmpty(), "a box other than the open one");
+        setIcon(a, "minecraft:not_an_item");
+        assertTrue(icons.isEmpty(), "not a real item");
+        setIcon(a, "diamond");
+        assertEquals(Optional.of("minecraft:diamond"), icons.get(a), "stored as a full id");
+        setIcon(a, "");
+        assertEquals(Optional.empty(), icons.get(a), "empty: back to automatic");
+    }
+
+    @Test void openedTellsTheModWhichBox() {
+        Pos a = new Pos(3, 70, 3);
+        boxes.put(a, CREEPER);
+        bridge.opened(player, a);
+        assertEquals(new Protocol.Box(a, CREEPER), Protocol.readBox(bodies.get(0)), "the box itself first, so the mod knows its icon");
+        assertEquals(ClientBridge.OPENED, sent.get(1)[1]);
+        assertEquals(a, Protocol.readOpened(bodies.get(1)));
+        assertEquals(1, bridge.watched(player), "and it's watched from now on");
     }
 }

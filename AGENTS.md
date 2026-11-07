@@ -19,6 +19,24 @@ plugin (their patterns were copied, their files never edited).
 
 ## Status (2026-11-06)
 
+- **Slice 3 (labels) built, not yet seen in a game.** Plugin 0.2.0, client 0.3.0, **protocol 2** (both must be
+  updated together).
+  - Placed boxes (owner's pick "B", 16 blocks): the label icon on every face except the one the box stands on, like
+    an item in an invisible item frame (`render/Labels`); faces against a solid block or another box are skipped;
+    hidden while the box is open. The box you look at gets its name floating above it (the icon item's name, grey,
+    if it isn't renamed), drawn like Logic Blocks' side labels.
+  - Box items: a half-size icon in the bottom-right corner in inventories and the hotbar
+    (`GuiGraphicsExtractorMixin`); the chosen icon comes from the item's custom data (`PublicBukkitValues`), the
+    automatic one from its contents.
+  - Icon slot to the right of an open box's screen (`ui/IconSlot`): click then click an item, click with an item on
+    the cursor, right-click for automatic. Server: `opened` / `seticon` (`ClientBridge`), only for the box that
+    player has open.
+  - Settings (`/shulkermod`): labels on/off, label distance 4-64 (16), inventory icons on/off. `/shulkermod info` is
+    the old status command.
+  - Checked here: plugin 29 unit tests; self-test 16 checks on Paper 26.3-211 (new: setting/clearing the icon keeps
+    the patterns); mixin audit passes with the two new mixins; client compiles. **Not checked: anything on screen,
+    and the icon slot round trip** (needs a player).
+
 - **Slice 2 (patterns drawn): seen working in the owner's game (0.2.1).** Client 0.2.2 (plugin unchanged, 0.1.0; protocol 1).
   - Placed boxes: the layers the server reported are drawn over the box, the lid's part moving with the lid.
   - Items (inventory, hand, dropped, item frames): from the item's own `banner_patterns`.
@@ -56,11 +74,10 @@ plugin (their patterns were copied, their files never edited).
 
 1. Slice 2 needs the owner's in-game check (`docs/TEST_PLAN.md` tests 18-27), then fixes from his screenshots
    (likely suspects: a face mirrored, layer order, z-fighting, brightness).
-2. Slice 3: labels (name + icon) on placed boxes and items; settings screen (on/off, distance). **Decision 4 (where
-   labels show) is still open:** show the owner mockups first. Suggested: the side the box opens toward, and the lid.
-3. Slice 3: the icon button in the box's screen (decision table). Needs a new client->server message (set the icon
-   of the box at x, y, z the player has open; checked server-side: that box's inventory is open for that player) and
-   a protocol bump.
+2. Slice 3 needs the owner's in-game check (`docs/TEST_PLAN.md` tests 29-40) and fixes from his screenshots
+   (likely suspects: icon size or distance from the face, an icon facing inward, the name's height, the corner icon
+   hiding behind the item).
+3. Later, not committed to: a key to toggle labels; icons that ride the lid while it opens.
 
 ## Decisions already made (don't reopen without asking)
 
@@ -69,6 +86,9 @@ plugin (their patterns were copied, their files never edited).
 | Name "Shulker Styles", folder `software\shulker-styles` | Owner's call |
 | The box keeps its own dye colour; the banner's layers go over it, its base colour is ignored | Owner's call (shields replace the colour; boxes don't) |
 | Label icon: automatic (most common item inside, by total count, ties to the first slot) **and** the player can choose one | Owner: "both" |
+| Labels on placed boxes: the icon on every face except the one the box stands on; the name pops up over the box you look at; within 16 blocks by default (settings 4-64) | Owner picked "B" and 16 blocks from mockups of A (icon + name always) / B / C (only on look) |
+| Unnamed box under the crosshair shows its icon item's name (grey) | Something useful to read; renaming is optional |
+| Icons hide while a box is open | The lid would carry half the side icon away; simpler than making icons ride the lid |
 | Choosing the icon: a button in the shulker box's screen (mod, slice 3): click the icon slot by the title, then any item in the box or your inventory; click again for automatic. `/shulkerstyles icon` (off hand) stays as the fallback for players without the mod | Owner: the command alone isn't good enough UX; picked the in-screen button over dropping an item onto the box or an item frame |
 | Removing patterns: water cauldron, one layer per use, one water level each, like banners; vanilla's undye only once no layers are left; sneaking places | Owner chose the cauldron, then confirmed one layer per use "for now" |
 | Recipe: shapeless box + banner; banner used up; no result for a plain banner or a box that already has patterns; at most 16 layers | Kickoff, as shields |
@@ -114,6 +134,8 @@ plugin (their patterns were copied, their files never edited).
 
 ## Gotchas
 
+- **Protocol 2:** plugin 0.2.0 and client 0.3.0 only work with each other; an older mod on a new server (or the
+  reverse) draws nothing and `/shulkermod info` says to update.
 - **Only mixins in `client/mixin/`.** Duck interfaces and helpers go elsewhere (`client/render/`), or the game
   fails to load resources (black screen). Run `ci/mixin-audit/run.sh` after any mixin change; CI runs it too.
 - Box item model override: a resource pack that replaces `items/*_shulker_box.json` wins over the mod's, and then

@@ -4,6 +4,8 @@ import dev.whizzle.shulker.client.net.Net;
 import dev.whizzle.shulker.model.BoxInfo;
 import dev.whizzle.shulker.model.Protocol;
 import dev.whizzle.shulker.model.Protocol.Pos;
+import dev.whizzle.shulker.client.ui.IconSlot;
+import dev.whizzle.shulker.client.ui.SettingsScreen;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback;
 import net.fabricmc.fabric.api.client.command.v2.ClientCommands;
@@ -32,8 +34,9 @@ import java.util.Set;
 
 /**
  * Shulker Styles client. Talks to the plugin (hello, then asks about every shulker box in range and keeps the
- * answers, which the server updates) and draws banner patterns on placed boxes and box items ({@code render/},
- * {@code mixin/}). {@code /shulkermod} shows what the mod knows about the box you look at.
+ * answers, which the server updates), draws banner patterns and labels on placed boxes and box items
+ * ({@code render/}, {@code mixin/}), and adds the label icon slot to the box screen ({@code ui/IconSlot}).
+ * {@code /shulkermod} opens the settings; {@code /shulkermod info} shows what the mod knows about the box you look at.
  */
 public final class ShulkerStylesClient implements ClientModInitializer {
 	public static final Logger LOG = LoggerFactory.getLogger("shulkerstyles");
@@ -41,6 +44,8 @@ public final class ShulkerStylesClient implements ClientModInitializer {
 	/** From the server's welcome; 0 until it answers (or when the server doesn't have the plugin). */
 	static int serverProtocol, range;
 	private static long ticks;
+	/** {@code /shulkermod} opens the settings on the next tick (after chat closes). */
+	private static boolean openSettings;
 	/** Boxes that just appeared (placed, or their chunk loaded): asked about on the next tick, not the next scan. */
 	private static final Set<Pos> FRESH = new LinkedHashSet<>();
 
@@ -53,7 +58,10 @@ public final class ShulkerStylesClient implements ClientModInitializer {
 				range = w.range();
 				if (serverProtocol != Protocol.VERSION) LOG.warn("Server speaks Shulker Styles protocol {}, this mod {}: boxes won't be styled", serverProtocol, Protocol.VERSION);
 			},
-			Protocol.BOX, data -> BOXES.onBox(Protocol.readBox(data))));
+			Protocol.BOX, data -> BOXES.onBox(Protocol.readBox(data)),
+			Protocol.OPENED, data -> IconSlot.opened(Protocol.readOpened(data))));
+		Settings.load();
+		IconSlot.register();
 		ClientPlayConnectionEvents.JOIN.register((listener, sender, client) -> { reset(); dev.whizzle.shulker.client.render.Patterns.reload(); });
 		ClientPlayConnectionEvents.DISCONNECT.register((listener, client) -> reset());
 		ServerboundPlayChannelEvents.REGISTER.register((listener, sender, client, channels) -> {
@@ -70,18 +78,21 @@ public final class ShulkerStylesClient implements ClientModInitializer {
 			if (be instanceof ShulkerBoxBlockEntity) BOXES.forget(pos(be.getBlockPos()));
 		});
 		ClientCommandRegistrationCallback.EVENT.register((dispatcher, context) ->
-			dispatcher.register(ClientCommands.literal("shulkermod").executes(c -> { status(c.getSource().getClient()); return 1; })));
+			dispatcher.register(ClientCommands.literal("shulkermod")
+				.executes(c -> { openSettings = true; return 1; })
+				.then(ClientCommands.literal("info").executes(c -> { status(c.getSource().getClient()); return 1; }))));
 	}
 
 	static void reset() { serverProtocol = 0; range = 0; BOXES.clear(); FRESH.clear(); }
 
 	static Pos pos(BlockPos p) { return new Pos(p.getX(), p.getY(), p.getZ()); }
 
-	static boolean active() { return serverProtocol == Protocol.VERSION && range > 0; }
+	public static boolean active() { return serverProtocol == Protocol.VERSION && range > 0; }
 
 	/** Every tick: ask about boxes that just appeared. Every 10 ticks: forget boxes out of range, ask about the rest. */
 	static void tick(Minecraft mc) {
 		++ticks;
+		if (openSettings) { openSettings = false; mc.gui.setScreen(new SettingsScreen(null)); }
 		if (!active() || mc.level == null || mc.player == null) { FRESH.clear(); return; }
 		BlockPos me = mc.player.blockPosition();
 		long r2 = (long) range * range;

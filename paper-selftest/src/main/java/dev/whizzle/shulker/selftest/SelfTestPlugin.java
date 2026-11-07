@@ -238,6 +238,15 @@ public final class SelfTestPlugin extends JavaPlugin {
             BoxInfo j = Styles.info(at(r2, 0));
             return j.icon().equals("minecraft:iron_ingot") ? null : "after adding iron: " + j.icon();
         }));
+        int r3 = 190;
+        steps.add(new Step("icon slot: setting the icon keeps the patterns; clearing goes back to automatic", () -> placedBox(r3, 0, Material.PINK_SHULKER_BOX), 1, () -> {
+            Styles.storeIcon(at(r3, 0), "minecraft:emerald");
+            BoxInfo i = Styles.info(at(r3, 0));
+            if (!i.icon().equals("minecraft:emerald") || !i.iconChosen() || i.layers().size() != 2) return "after setting: " + i;
+            Styles.storeIcon(at(r3, 0), null);
+            BoxInfo j = Styles.info(at(r3, 0));
+            return j.icon().equals("minecraft:cobblestone") && !j.iconChosen() && j.layers().size() == 2 ? null : "after clearing: " + j;
+        }));
         steps.add(new Step("info: not a box -> nothing", () -> at(r2 + 2, 0).setType(Material.CHEST), 1,
             () -> Styles.info(at(r2 + 2, 0)) == null ? null : "a chest has info"));
 

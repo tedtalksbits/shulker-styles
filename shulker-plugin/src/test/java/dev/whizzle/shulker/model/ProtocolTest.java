@@ -72,4 +72,15 @@ class ProtocolTest {
         // A tie goes to the item that comes first.
         assertEquals("minecraft:sand", Icons.mostCommon(java.util.Arrays.asList(null, new Icons.Slot("minecraft:sand", 5), new Icons.Slot("minecraft:gravel", 5))));
     }
+
+    @Test void openedAndSetIcon() {
+        Pos p = new Pos(-5, 64, 12);
+        assertEquals(p, Protocol.readOpened(Protocol.opened(p)));
+        assertEquals(new Protocol.SetIcon(p, "minecraft:diamond"), Protocol.readSetIcon(Protocol.setIcon(p, "minecraft:diamond")));
+        assertEquals(new Protocol.SetIcon(p, ""), Protocol.readSetIcon(Protocol.setIcon(p, "")));
+        assertArrayEquals(new byte[]{0, 0, 0, 1, 0, 0, 0, 2, 0, 0, 0, 3, 1, 'x'}, Protocol.setIcon(new Pos(1, 2, 3), "x"));
+        assertThrows(IllegalArgumentException.class, () -> Protocol.readSetIcon(new byte[]{0, 0, 0, 1}));
+    }
+
+    @Test void version2() { assertEquals(2, Protocol.VERSION); }
 }
