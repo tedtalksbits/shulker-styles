@@ -19,7 +19,7 @@ plugin (their patterns were copied, their files never edited).
 
 ## Status (2026-11-06)
 
-- **Slice 3 (labels) built, not yet seen in a game.** Plugin 0.2.0, client 0.3.0, **protocol 2** (both must be
+- **Slice 3 (labels) built, not yet seen in a game.** Plugin 0.2.0, client 0.3.1, **protocol 2** (both must be
   updated together).
   - Placed boxes (owner's pick "B", 16 blocks): the label icon on every face except the one the box stands on, like
     an item in an invisible item frame (`render/Labels`); faces against a solid block or another box are skipped;
@@ -34,6 +34,10 @@ plugin (their patterns were copied, their files never edited).
   - `/shulkerstyles demo [kit]` (creative only, `Demo`): a 4 x 2 wall of example boxes 3 blocks ahead with a water
     cauldron, and a kit (4 patterned banners, 3 plain boxes, a patterned box); refused if the space isn't empty.
     Owner asked for it: crafting test boxes every time was tedious.
+  - Client 0.3.1: the owner found the icon slot's hover tooltip never showed. Cause: drawn from Fabric's
+    `afterExtract`, which runs after the frame's tooltips are drawn (`Screen.extractRenderStateWithTooltipAndSubtitles`
+    ends with `extractDeferredElements`). Now `afterForeground` (for container screens: after the slots, before the
+    carried item and tooltips). Picking mode is now a yellow slot with "Now click an item" under it; "Icon" label.
   - Settings (`/shulkermod`): labels on/off, label distance 4-64 (16), inventory icons on/off. `/shulkermod info` is
     the old status command.
   - Checked here: plugin 32 unit tests; self-test 18 checks (+2 demo) on Paper 26.3-211 (new: setting/clearing the icon keeps
@@ -140,6 +144,8 @@ plugin (their patterns were copied, their files never edited).
 
 - **Protocol 2:** plugin 0.2.0 and client 0.3.0 only work with each other; an older mod on a new server (or the
   reverse) draws nothing and `/shulkermod info` says to update.
+- **Screen overlays: draw from `ScreenEvents.afterForeground`, not `afterExtract`.** `afterExtract` runs after the
+  frame's tooltips, so tooltips set there never show and the drawing covers item tooltips.
 - **Only mixins in `client/mixin/`.** Duck interfaces and helpers go elsewhere (`client/render/`), or the game
   fails to load resources (black screen). Run `ci/mixin-audit/run.sh` after any mixin change; CI runs it too.
 - Box item model override: a resource pack that replaces `items/*_shulker_box.json` wins over the mod's, and then

@@ -1,7 +1,7 @@
 # Test plan: Shulker Styles
 
 Slice 1 (server side, tests 1-17) passed the real-Paper self-test; in a game, tests 2 and 5 passed. Slice 2 (patterns,
-tests 18-28): 0.2.1 looked good in your game. **Slice 3 (labels, plugin 0.2.0 + client 0.3.0, tests 29-40) is new and
+tests 18-28): 0.2.1 looked good in your game. **Slice 3 (labels, plugin 0.2.0 + client 0.3.1, tests 29-40) is new and
 hasn't been seen on screen**: screenshots please. Plugin and mod must both be updated (protocol 2).
 `/shulkermod info` (mod) and `/shulkerstyles info` (plugin) show what each side knows; `/shulkermod` opens the mod's
 settings.
@@ -58,7 +58,7 @@ Each face shows the middle square of the banner's pattern (your pick "B"). Scree
 | 27 | Break a placed patterned box and put a **plain** box in the same spot | The new plain box shows no pattern (no leftovers). |
 | 28 | Place a patterned box and watch it | The pattern is there straight away (0.2.1 took up to half a second). |
 
-### Slice 3: labels (plugin 0.2.0, client 0.3.0)
+### Slice 3: labels (plugin 0.2.0, client 0.3.1)
 
 Your picks: the icon on the box, the name over the box you look at, within 16 blocks. Screenshots of 29, 30, 32 and
 35 please.
@@ -71,8 +71,8 @@ Your picks: the icon on the box, the name over the box you look at, within 16 bl
 | 32 | Look at a box you renamed ("Redstone") | "Redstone" floats above it, like a name tag. Look away: gone. An unnamed box shows its icon's name in grey. |
 | 33 | Walk away | Icons and names disappear past 16 blocks; patterns stay. |
 | 34 | Open a box | Its icons disappear while it's open and come back when it closes. |
-| 35 | Open a box: a slot to the right of its screen shows its icon | Hover it: what the icon is, automatic or chosen, and how to change it. |
-| 36 | Click that slot (it turns yellow), then click a diamond in your inventory | The slot shows a diamond; the diamond stays where it was. Close the box: the icon on the box is a diamond. |
+| 35 | Open a box: a slot to the right of its screen, "Icon" under it, shows its icon | Hover it: a tooltip says what the icon is, automatic or chosen, and how to change it. |
+| 36 | Click that slot: it turns yellow with "Now click an item" under it. Click a diamond in your inventory | The slot shows a diamond within a moment; the diamond stays where it was. Close the box: the icon on the box is a diamond. |
 | 37 | Pick up an item with the mouse, click the slot with it | That item becomes the icon. Right-click the slot: back to automatic. |
 | 38 | Break a box with a chosen icon, look at it in your inventory and hotbar | A small icon in the bottom-right corner of the box item; the chosen one, not the most common. Place it again: same icon. |
 | 39 | `/shulkermod` | Settings: labels on/off, label distance, icons on box items on/off. Each takes effect at once. |

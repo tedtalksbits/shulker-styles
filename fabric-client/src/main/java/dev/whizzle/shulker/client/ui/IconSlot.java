@@ -31,7 +31,7 @@ public final class IconSlot {
 	private IconSlot() {}
 
 	static final int SIZE = 22;
-	private static final int BG = 0xFF8B8B8B, DARK = 0xFF373737, LIGHT = 0xFFFFFFFF, PICKING = 0xFFFFD84A;
+	private static final int BG = 0xFF8B8B8B, DARK = 0xFF373737, LIGHT = 0xFFFFFFFF, PICKING = 0xFFFFD84A, PICKING_BG = 0xFFE8C34A;
 
 	/** The placed box the open screen belongs to (the server's {@code opened}); null when unknown. */
 	private static Protocol.Pos open;
@@ -42,7 +42,9 @@ public final class IconSlot {
 	public static void register() {
 		ScreenEvents.AFTER_INIT.register((mc, screen, w, h) -> {
 			if (!(screen instanceof ShulkerBoxScreen)) return;
-			ScreenEvents.afterExtract(screen).register(IconSlot::draw);
+			// After the box's slots, before the carried item and tooltips (afterExtract would be too late: the
+			// frame's tooltips are already drawn by then, so ours never showed and the slot covered item tooltips).
+			ScreenEvents.afterForeground(screen).register(IconSlot::draw);
 			ScreenMouseEvents.allowMouseClick(screen).register(IconSlot::click);
 			ScreenEvents.remove(screen).register(s -> { open = null; picking = false; });
 		});
@@ -58,17 +60,23 @@ public final class IconSlot {
 		if (!shown()) return;
 		int x = x(screen), y = y(screen);
 		BoxInfo info = ShulkerStylesClient.BOXES.get(open);
-		// A slot like the inventory's, outlined in yellow while waiting for an item.
-		g.fill(x, y, x + SIZE, y + SIZE, picking ? PICKING : DARK);
+		// A slot like the inventory's; all yellow while waiting for an item, with a hint under it.
+		g.fill(x, y, x + SIZE, y + SIZE, DARK);
 		g.fill(x + 1, y + 1, x + SIZE, y + SIZE, picking ? PICKING : LIGHT);
-		g.fill(x + 1, y + 1, x + SIZE - 1, y + SIZE - 1, BG);
+		g.fill(x + 1, y + 1, x + SIZE - 1, y + SIZE - 1, picking ? PICKING_BG : (over(screen, mouseX, mouseY) ? 0xFFA8A8A8 : BG));
 		ItemStack icon = info == null ? ItemStack.EMPTY : ClientIcons.stack(info.icon());
 		if (!icon.isEmpty()) g.item(icon, x + 3, y + 3);
 		else g.centeredText(Minecraft.getInstance().font, Component.literal("?"), x + SIZE / 2, y + 7, 0xFFE0E0E0);
 
+		var font = Minecraft.getInstance().font;
 		if (picking) {
-			g.setTooltipForNextFrame(Minecraft.getInstance().font, Component.literal("Click an item for this box's icon"), mouseX, mouseY);
-		} else if (over(screen, mouseX, mouseY)) {
+			// Text under the slot (a tooltip would be hidden by the item tooltips while choosing).
+			g.text(font, "Now click", x - 4, y + SIZE + 3, PICKING);
+			g.text(font, "an item", x - 4, y + SIZE + 13, PICKING);
+		} else {
+			g.text(font, "Icon", x + (SIZE - font.width("Icon")) / 2, y + SIZE + 3, 0xFFE0E0E0);
+		}
+		if (!picking && over(screen, mouseX, mouseY)) {
 			List<Component> lines = new ArrayList<>();
 			Component what = icon.isEmpty() ? Component.literal("none (the box is empty)") : icon.getHoverName();
 			lines.add(Component.literal("Label icon: ").append(what));
