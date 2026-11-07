@@ -20,6 +20,8 @@ By **tedtalksbits**. Minecraft / Paper 26.3.
   right of its screen (with the mod), or hold the box with the item in your off hand and run `/shulkerstyles icon`.
   `/shulkerstyles icon clear` goes back to automatic.
 - `/shulkerstyles info`: what the box you hold or look at carries (also works without the mod).
+- `/shulkerstyles demo` (creative): a wall of example boxes in front of you and a kit to try the recipe;
+  `/shulkerstyles demo kit` for the kit only.
 
 The style stays with the box when it's broken (survival or creative), broken by a piston or an explosion, placed by
 a dispenser, or picked with Ctrl+middle-click. (The self-test proves the piston, explosion, dispenser and

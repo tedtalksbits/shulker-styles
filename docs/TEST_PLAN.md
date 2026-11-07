@@ -12,8 +12,10 @@ settings.
 2. Double-click `run\build-and-install.cmd`. It stops the test server (`..\blueprints-mc\run\local-paper`), builds
    and tests both parts, installs `plugins\ShulkerStyles.jar` and the client mod in `%APPDATA%\.minecraft\mods\`,
    then offers to start the server.
-3. Launch **fabric-loader-26.3** and join. Make a couple of patterned banners in a loom (a red creeper on white, a
-   blue border on black). The recipe needs a **banner** with patterns, not a banner pattern item (the loom template,
+3. Launch **fabric-loader-26.3** and join. In creative, **`/shulkerstyles demo`** builds a wall of 8 example boxes
+   3 blocks in front of you (patterns, contents, names, one chosen icon) with a full water cauldron to its right, and
+   gives you a kit: 4 patterned banners, 3 plain boxes and a ready patterned box. `/shulkerstyles demo kit` gives
+   only the kit. Or make banners in a loom yourself (a red creeper on white, a blue border on black). The recipe needs a **banner** with patterns, not a banner pattern item (the loom template,
    whose icon also shows a creeper).
 
 ## Tests
@@ -75,6 +77,8 @@ Your picks: the icon on the box, the name over the box you look at, within 16 bl
 | 38 | Break a box with a chosen icon, look at it in your inventory and hotbar | A small icon in the bottom-right corner of the box item; the chosen one, not the most common. Place it again: same icon. |
 | 39 | `/shulkermod` | Settings: labels on/off, label distance, icons on box items on/off. Each takes effect at once. |
 | 40 | A friend without the mod | Normal boxes, no slot, no errors. `/shulkerstyles icon` still works for them. |
+| 41 | Creative, open ground: `/shulkerstyles demo`, facing each way once | The wall 3 blocks ahead, left to right: Mob drops, Diamonds, Farm, (unnamed string box) on top; Redstone, Metals (chosen icon: iron), Stone, Wood below. Cauldron on the right. Kit in your inventory. |
+| 42 | `/shulkerstyles demo` again in the same spot; then in survival | "Not enough room" (nothing built over the first wall); in survival: "Demos only work in creative mode". |
 
 ## ⚠️ Known limits and decisions for you
 

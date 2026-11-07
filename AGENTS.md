@@ -31,9 +31,12 @@ plugin (their patterns were copied, their files never edited).
   - Icon slot to the right of an open box's screen (`ui/IconSlot`): click then click an item, click with an item on
     the cursor, right-click for automatic. Server: `opened` / `seticon` (`ClientBridge`), only for the box that
     player has open.
+  - `/shulkerstyles demo [kit]` (creative only, `Demo`): a 4 x 2 wall of example boxes 3 blocks ahead with a water
+    cauldron, and a kit (4 patterned banners, 3 plain boxes, a patterned box); refused if the space isn't empty.
+    Owner asked for it: crafting test boxes every time was tedious.
   - Settings (`/shulkermod`): labels on/off, label distance 4-64 (16), inventory icons on/off. `/shulkermod info` is
     the old status command.
-  - Checked here: plugin 29 unit tests; self-test 16 checks on Paper 26.3-211 (new: setting/clearing the icon keeps
+  - Checked here: plugin 32 unit tests; self-test 18 checks (+2 demo) on Paper 26.3-211 (new: setting/clearing the icon keeps
     the patterns); mixin audit passes with the two new mixins; client compiles. **Not checked: anything on screen,
     and the icon slot round trip** (needs a player).
 
@@ -86,6 +89,7 @@ plugin (their patterns were copied, their files never edited).
 | Name "Shulker Styles", folder `software\shulker-styles` | Owner's call |
 | The box keeps its own dye colour; the banner's layers go over it, its base colour is ignored | Owner's call (shields replace the colour; boxes don't) |
 | Label icon: automatic (most common item inside, by total count, ties to the first slot) **and** the player can choose one | Owner: "both" |
+| Demos only in creative mode | Same rule as Logic Blocks: they hand out free items |
 | Labels on placed boxes: the icon on every face except the one the box stands on; the name pops up over the box you look at; within 16 blocks by default (settings 4-64) | Owner picked "B" and 16 blocks from mockups of A (icon + name always) / B / C (only on look) |
 | Unnamed box under the crosshair shows its icon item's name (grey) | Something useful to read; renaming is optional |
 | Icons hide while a box is open | The lid would carry half the side icon away; simpler than making icons ride the lid |

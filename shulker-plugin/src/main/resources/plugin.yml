@@ -7,7 +7,7 @@ author: tedtalksbits
 commands:
   shulkerstyles:
     description: Shulker Styles help, label icon and info
-    usage: /shulkerstyles [icon [clear] | info]
+    usage: /shulkerstyles [icon [clear] | info | demo [kit]]
     aliases: [shulker]
     permission: shulkerstyles.use
 permissions:

@@ -77,6 +77,7 @@ public class ShulkerStylesPlugin extends JavaPlugin implements Listener, TabExec
         switch (sub) {
             case "icon" -> icon(p, args.length > 1 && args[1].equalsIgnoreCase("clear"));
             case "info" -> info(p);
+            case "demo" -> demo(p, args.length > 1 ? args[1].toLowerCase(Locale.ROOT) : "");
             default -> {
                 p.sendMessage(Component.text("Shulker Styles", NamedTextColor.AQUA));
                 p.sendMessage(Component.text("  Craft a shulker box with a banner to put the banner's patterns on it.", NamedTextColor.GRAY));
@@ -84,6 +85,7 @@ public class ShulkerStylesPlugin extends JavaPlugin implements Listener, TabExec
                 p.sendMessage(Component.text("  /" + label + " icon: hold a box, and in your off hand the item to show as its label icon.", NamedTextColor.GRAY));
                 p.sendMessage(Component.text("  /" + label + " icon clear: back to the item it holds most of.", NamedTextColor.GRAY));
                 p.sendMessage(Component.text("  /" + label + " info: what the box you hold or look at shows.", NamedTextColor.GRAY));
+                p.sendMessage(Component.text("  /" + label + " demo [kit]: example boxes in front of you, and a kit (creative only).", NamedTextColor.GRAY));
             }
         }
         return true;
@@ -129,6 +131,21 @@ public class ShulkerStylesPlugin extends JavaPlugin implements Listener, TabExec
         p.sendMessage(Component.text("  Icon: " + icon, NamedTextColor.GRAY));
     }
 
+    /** {@code demo}: the wall and the kit; {@code demo kit}: the kit only. Creative only (free items). */
+    private void demo(Player p, String what) {
+        if (p.getGameMode() != org.bukkit.GameMode.CREATIVE) {
+            p.sendMessage(Component.text("Demos only work in creative mode.", NamedTextColor.RED));
+            return;
+        }
+        if (!what.equals("kit")) {
+            String problem = Demo.build(p.getLocation(), p.getFacing());
+            if (problem != null) { p.sendMessage(Component.text(problem, NamedTextColor.RED)); return; }
+            p.sendMessage(Component.text("Example boxes in front of you; a water cauldron to their right for washing.", NamedTextColor.GREEN));
+        }
+        Demo.give(p);
+        p.sendMessage(Component.text("Kit: patterned banners and plain boxes to craft (box + banner), and a ready patterned box.", NamedTextColor.GREEN));
+    }
+
     static String describe(List<Layer> layers) {
         StringBuilder sb = new StringBuilder();
         for (Layer l : layers) {
@@ -140,7 +157,8 @@ public class ShulkerStylesPlugin extends JavaPlugin implements Listener, TabExec
 
     @Override
     public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
-        if (args.length == 1) return List.of("icon", "info").stream().filter(s -> s.startsWith(args[0].toLowerCase(Locale.ROOT))).toList();
+        if (args.length == 2 && args[0].equalsIgnoreCase("demo")) return "kit".startsWith(args[1].toLowerCase(Locale.ROOT)) ? List.of("kit") : List.of();
+        if (args.length == 1) return List.of("icon", "info", "demo").stream().filter(s -> s.startsWith(args[0].toLowerCase(Locale.ROOT))).toList();
         if (args.length == 2 && args[0].equalsIgnoreCase("icon")) return "clear".startsWith(args[1].toLowerCase(Locale.ROOT)) ? List.of("clear") : List.of();
         return List.of();
     }

@@ -250,6 +250,32 @@ public final class SelfTestPlugin extends JavaPlugin {
         steps.add(new Step("info: not a box -> nothing", () -> at(r2 + 2, 0).setType(Material.CHEST), 1,
             () -> Styles.info(at(r2 + 2, 0)) == null ? null : "a chest has info"));
 
+        // 7b. The demo wall: built where there's room, refused where there isn't.
+        int dm = 215;
+        steps.add(new Step("demo: builds the wall of example boxes and a full water cauldron", () -> {
+            String problem = dev.whizzle.shulker.Demo.build(at(dm, 0).getLocation(), BlockFace.NORTH);
+            if (problem != null) throw new IllegalStateException(problem);
+        }, 2, () -> {
+            // Facing north, 3 blocks ahead: z = -3; the wall runs west to east from x = dm - 2.
+            int boxes = 0, styled = 0, named = 0;
+            for (int bx = dm - 2; bx < dm + 2; bx++) for (int y = Y; y < Y + 2; y++) {
+                Block box = w.getBlockAt(bx, y, -3);
+                BoxInfo i = Styles.info(box);
+                if (i == null) continue;
+                boxes++;
+                if (!i.layers().isEmpty() && !i.icon().isEmpty()) styled++;
+                if (!i.name().isEmpty()) named++;
+            }
+            Block c = w.getBlockAt(dm + 3, Y, -3);
+            int level = c.getBlockData() instanceof Levelled l ? l.getLevel() : -1;
+            return all(boxes == 8 ? null : boxes + " boxes", styled == 8 ? null : styled + " with patterns and an icon", named == 7 ? null : named + " named",
+                level == 3 ? null : "cauldron " + c.getType() + " level " + level);
+        }));
+        steps.add(new Step("demo: no room -> refused, nothing changed", () -> {}, 1, () -> {
+            String problem = dev.whizzle.shulker.Demo.build(at(dm, 0).getLocation(), BlockFace.NORTH);
+            return problem != null && problem.startsWith("Not enough room") ? null : "built over the first wall";
+        }));
+
         // 8. Washing on a real cauldron block (the click itself needs a player: test plan).
         int c = 200;
         steps.add(new Step("wash: top layer off, water level down by one", () -> {
