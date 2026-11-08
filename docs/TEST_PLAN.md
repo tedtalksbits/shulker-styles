@@ -1,7 +1,7 @@
 # Test plan: Shulker Styles
 
 Slice 1 (server side, tests 1-17) passed the real-Paper self-test; in a game, tests 2 and 5 passed. Slice 2 (patterns,
-tests 18-28): 0.2.1 looked good in your game. **Slice 3 (labels, plugin 0.2.0 + client 0.3.1, tests 29-40) is new and
+tests 18-28): 0.2.1 looked good in your game. **Slice 3 (labels, plugin 0.2.0 + client 0.3.2, tests 29-40) is new and
 hasn't been seen on screen**: screenshots please. Plugin and mod must both be updated (protocol 2).
 `/shulkermod info` (mod) and `/shulkerstyles info` (plugin) show what each side knows; `/shulkermod` opens the mod's
 settings.
@@ -58,7 +58,7 @@ Each face shows the middle square of the banner's pattern (your pick "B"). Scree
 | 27 | Break a placed patterned box and put a **plain** box in the same spot | The new plain box shows no pattern (no leftovers). |
 | 28 | Place a patterned box and watch it | The pattern is there straight away (0.2.1 took up to half a second). |
 
-### Slice 3: labels (plugin 0.2.0, client 0.3.1)
+### Slice 3: labels (plugin 0.2.0, client 0.3.2)
 
 Your picks: the icon on the box, the name over the box you look at, within 16 blocks. Screenshots of 29, 30, 32 and
 35 please.

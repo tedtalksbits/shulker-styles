@@ -19,7 +19,8 @@ plugin (their patterns were copied, their files never edited).
 
 ## Status (2026-11-06)
 
-- **Slice 3 (labels) done; owner, 2026-11-07, on client 0.3.1: "looks good".** Plugin 0.2.0, client 0.3.1, **protocol 2** (both must be
+- **Slice 3 (labels) done; owner, 2026-11-07: looks good on 0.3.1 except the icon slot's clicks (fixed in 0.3.2,
+  not yet confirmed).** Plugin 0.2.0, client 0.3.2, **protocol 2** (both must be
   updated together).
   - Placed boxes (owner's pick "B", 16 blocks): the label icon on every face except the one the box stands on, like
     an item in an invisible item frame (`render/Labels`); faces against a solid block or another box are skipped;
@@ -38,6 +39,9 @@ plugin (their patterns were copied, their files never edited).
     `afterExtract`, which runs after the frame's tooltips are drawn (`Screen.extractRenderStateWithTooltipAndSubtitles`
     ends with `extractDeferredElements`). Now `afterForeground` (for container screens: after the slots, before the
     carried item and tooltips). Picking mode is now a yellow slot with "Now click an item" under it; "Icon" label.
+  - Client 0.3.2: clicking the icon slot did nothing (owner). Cause: 26.x numbers mouse buttons like SDL (left 1,
+    right 3), so the slot read a left click as a right click ("automatic"). Now `InputConstants.MOUSE_BUTTON_*`;
+    `SourceRulesTest` fails on any literal button comparison.
   - Settings (`/shulkermod`): labels on/off, label distance 4-64 (16), inventory icons on/off. `/shulkermod info` is
     the old status command.
   - Checked here: plugin 32 unit tests; self-test 18 checks (+2 demo) on Paper 26.3-211 (new: setting/clearing the icon keeps
@@ -144,6 +148,8 @@ plugin (their patterns were copied, their files never edited).
 
 - **Protocol 2:** plugin 0.2.0 and client 0.3.0 only work with each other; an older mod on a new server (or the
   reverse) draws nothing and `/shulkermod info` says to update.
+- **Mouse buttons in 26.x are SDL-numbered: left 1, middle 2, right 3** (not 0/1/2). Compare with
+  `InputConstants.MOUSE_BUTTON_LEFT/RIGHT`; vanilla's own code does (`AbstractContainerScreen.mouseClicked`).
 - **Screen overlays: draw from `ScreenEvents.afterForeground`, not `afterExtract`.** `afterExtract` runs after the
   frame's tooltips, so tooltips set there never show and the drawing covers item tooltips.
 - **Only mixins in `client/mixin/`.** Duck interfaces and helpers go elsewhere (`client/render/`), or the game

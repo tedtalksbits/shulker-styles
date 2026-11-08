@@ -1,5 +1,6 @@
 package dev.whizzle.shulker.client.ui;
 
+import com.mojang.blaze3d.platform.InputConstants;
 import dev.whizzle.shulker.client.ShulkerStylesClient;
 import dev.whizzle.shulker.client.mixin.ContainerScreenAccessor;
 import dev.whizzle.shulker.client.net.Net;
@@ -92,8 +93,9 @@ public final class IconSlot {
 	private static boolean click(Screen screen, MouseButtonEvent e) {
 		if (!shown()) return true;
 		if (over(screen, e.x(), e.y())) {
-			if (e.button() == 1) { send(""); picking = false; return false; }
-			if (e.button() != 0) return false;
+			// 26.x numbers mouse buttons like SDL (left 1, right 3): use the constants, never 0/1.
+			if (e.button() == InputConstants.MOUSE_BUTTON_RIGHT) { send(""); picking = false; return false; }
+			if (e.button() != InputConstants.MOUSE_BUTTON_LEFT) return false;
 			ItemStack carried = ((ShulkerBoxScreen) screen).getMenu().getCarried();
 			if (!carried.isEmpty()) { send(id(carried)); picking = false; }
 			else picking = !picking;
