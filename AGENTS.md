@@ -19,7 +19,7 @@ plugin (their patterns were copied, their files never edited).
 
 ## Status (2026-11-06)
 
-- **Slice 3 (labels) built, not yet seen in a game.** Plugin 0.2.0, client 0.3.1, **protocol 2** (both must be
+- **Slice 3 (labels) done; owner, 2026-11-07, on client 0.3.1: "looks good".** Plugin 0.2.0, client 0.3.1, **protocol 2** (both must be
   updated together).
   - Placed boxes (owner's pick "B", 16 blocks): the label icon on every face except the one the box stands on, like
     an item in an invisible item frame (`render/Labels`); faces against a solid block or another box are skipped;
